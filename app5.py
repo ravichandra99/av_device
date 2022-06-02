@@ -36,13 +36,15 @@ rds_host = os.getenv('RDS_URL')
 rds_user = os.getenv('RDS_USER')
 rds_pass = os.getenv('RDS_PASS')
 rds_db = os.getenv('RDS_DB')
-
+site = os.getenv('SITE_ID')
+device = os.getenv('DEVICE_ID')
 conn = pymysql.connect(host= rds_host,port = 3306,user = rds_user, password = rds_pass,db = rds_db)
 
 
-def insert_details(id,count,time):
+def insert_details(genders,ages,id,count,time,device,site):
     cur=conn.cursor()
-    cur.execute("INSERT INTO firstlast(id,just,fake) VALUES (%s,%s,%s)", (id,count,time))
+    #cur.executemany("INSERT INTO firstlast(mimetype,count,time) VALUES (%s,%s,%s)",[(str(id),str(count),str(time))])
+    cur.executemany("INSERT INTO firstlast(genders,ages,mimetype,count,time,device_id,site_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",[(str(genders),str(ages),str(id),str(count),str(time),str(device),str(site))])
     conn.commit()
 
 def get_details():
@@ -85,32 +87,39 @@ if __name__ == "__main__":
                     z = tuple(zip(genders,ages))
                     g = genders.count('Male') > genders.count('Female')
                     ages_males = [ y for x, y in z if x  == 'Male' ]
-                    classifications = [(i//10 + 1) for i in ages_males]
+                    ages_females = [ j for i, j in z if i  == 'Female' ]
+                    classifications_M = [(i//10 + 1) for i in ages_males]
+                    classifications_F = [(i//10 + 1) for i in ages_females]
                     try:
-                        r = max(classifications,key=classifications.count)
+                        m = max(classifications_M,key=classifications_M.count)
+                        f= max(classifications_F,key=classifications_F.count)
                     except:
-                        r = ''
+                        m = ''
+                        f = ''
                     
                     if g:
                         print(genders, ages)
-                        print('playing ad..')
-                        TestThreading(os.getenv('SCREENLY_ASSET_M'+str(r)))
-                        time.sleep(duration(os.getenv('SCREENLY_ASSET_M'+str(r)))+1)
+                        print('M_playing ad..')
+                        TestThreading(os.getenv('SCREENLY_ASSET_M'+str(m)))
+                        time.sleep(duration(os.getenv('SCREENLY_ASSET_M'+str(m)))+1)
                         
                     else:
                         print(genders, ages)
-                        print('playing ad..')
-                        TestThreading(os.getenv('SCREENLY_ASSET_F'+str(r)))
-                        time.sleep(duration(os.getenv('SCREENLY_ASSET_F'+str(r)))+1)
-                    insert_details(it,count,datetime.now())
+                        print('F_playing ad..')
+                        TestThreading(os.getenv('SCREENLY_ASSET_F'+str(f)))
+                        time.sleep(duration(os.getenv('SCREENLY_ASSET_F'+str(f)))+1)
+                    insert_details(genders,ages,it,count,datetime.now(),device,site)
 
                             
                     
                 except:
                     print(None)
-                    print('playing ad..')
+                    print('N_playing ad..')
                     TestThreading(os.getenv('SCREENLY_ASSET_AMLE'))
                     time.sleep(duration(os.getenv('SCREENLY_ASSET_AMLE'))+1)
+                    genders=None
+                    ages=None
+                    insert_details(genders,ages,it,count,datetime.now(),device,site)
 
             
                     
